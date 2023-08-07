@@ -1,11 +1,32 @@
 [package]
-name = "sol-rs"
+name = "portfolio-rs"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+
+# Local
+bindings = {path = "out/bindings"}
+
+# Cli
+clap = { version = "4.3.0", features = ["derive"] }
+config = "0.13.3"
+serde = { version = "1.0.163", features= ["derive"]}
+serde_derive = "1.0.180"
+
+# External
+tokio = { version = "1.28.1", features = ["macros", "full"] }
+ethers = { version = "2.0.4", default-features = false, features = ["abigen"] }
+statrs = "0.16.0"
+
+# Utils
+anyhow = "1.0.72"
+colored = "2.0.4"
+chrono = "0.4.26"
+
+# Alloy
 alloy-dyn-abi = "0.1.0"
 alloy-json-abi = "0.1.0"
 alloy-primitives = "0.2.0"

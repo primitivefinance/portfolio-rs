@@ -32,3 +32,15 @@ If you choose a different portfolio version, or install new dependencies, make s
 # Recompile rust bindings
 ./compile.sh
 ```
+
+### Commands
+
+
+
+*List*
+
+Lists the available portfolio pools, including their pool id and TVL.
+
+```bash
+cargo run -- list
+```

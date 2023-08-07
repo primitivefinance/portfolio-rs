@@ -1,3 +1,9 @@
+# Default profile is the parent struct for the basic toml config.
+[default]
+name = "default profile toml"
+rpc_url = "toml"
+
+# Not a profile, but a specific struct configuration for doing swap actions.
 [swap]
 pool_id = "0x0"
 min_price = 0

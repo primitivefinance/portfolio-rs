@@ -10,9 +10,11 @@ edition = "2021"
 # Local
 bindings = {path = "out/bindings"}
 
+# Config
+figment = { version = "0.10", features = ["toml", "env"] }
+
 # Cli
 clap = { version = "4.3.0", features = ["derive"] }
-config = "0.13.3"
 serde = { version = "1.0.163", features= ["derive"]}
 serde_derive = "1.0.180"
 

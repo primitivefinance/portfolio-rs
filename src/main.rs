@@ -1,11 +1,17 @@
 use alloy_primitives::Address;
 use clap::{Parser, Subcommand};
 
+use colored::Colorize;
+use dotenv::dotenv;
 use figment::{
     providers::{Env, Format, Serialized, Toml},
     Figment,
 };
 use serde::{Deserialize, Serialize};
+
+mod action;
+mod list;
+mod utils;
 
 /// # Portfolio rs
 /// Rust cli for fetching and interacting with the Portfolio protocol on supported networks.
@@ -14,19 +20,17 @@ use serde::{Deserialize, Serialize};
 /// - `list` - Lists all the pools, including pool id, tokens, and estimated TVL if available.
 /// - `info` - Prints a pool's state and configuration, if any.
 /// - `action` - Performs an action on a pool, such as swap, add liquidity, remove liquidity, etc. [Required] Settings in portfolio.toml.
-fn main() {
+#[tokio::main]
+async fn main() {
     println!("{}", WELCOME);
 
-    let settings = Config::new().unwrap();
-    println!("settings: {:?}", settings);
+    dotenv().ok();
 
+    let settings: Config = Config::new().unwrap();
     let args = Args::parse();
 
-    println!("args: {:?}", args);
     match &args.command {
-        Some(Commands::List {}) => {
-            println!("list");
-        }
+        Some(Commands::List {}) => list::list_pools(&settings).await.unwrap(),
         Some(Commands::Info {}) => {
             println!("info");
         }
@@ -71,7 +75,7 @@ impl Default for Swap {
 #[derive(Debug, Deserialize)]
 #[allow(unused)]
 #[serde(default)]
-struct Config {
+pub struct Config {
     name: String,
     rpc_url: String,
     factory_address: String,

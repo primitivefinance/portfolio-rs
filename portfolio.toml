@@ -1,7 +1,7 @@
 # Default profile is the parent struct for the basic toml config.
 [default]
 name = "default profile toml"
-rpc_url = "toml"
+portfolio_address = "0x3DedE8F8ac60cAe1f7AA76a92e91ED3ca38ba860"
 
 # Not a profile, but a specific struct configuration for doing swap actions.
 [swap]

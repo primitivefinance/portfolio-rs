@@ -1,7 +1,6 @@
 use alloy_primitives::Address;
-use clap::{Parser, Subcommand};
+use clap::{Args, Parser, Subcommand};
 
-use colored::Colorize;
 use dotenv::dotenv;
 use figment::{
     providers::{Env, Format, Serialized, Toml},
@@ -9,7 +8,9 @@ use figment::{
 };
 use serde::{Deserialize, Serialize};
 
-mod action;
+mod act;
+mod actions;
+mod info;
 mod list;
 mod utils;
 
@@ -21,26 +22,31 @@ mod utils;
 /// - `info` - Prints a pool's state and configuration, if any.
 /// - `action` - Performs an action on a pool, such as swap, add liquidity, remove liquidity, etc. [Required] Settings in portfolio.toml.
 #[tokio::main]
-async fn main() {
+async fn main() -> anyhow::Result<(), anyhow::Error> {
     println!("{}", WELCOME);
 
     dotenv().ok();
 
     let settings: Config = Config::new().unwrap();
-    let args = Args::parse();
+    let args = App::parse();
 
     match &args.command {
-        Some(Commands::List {}) => list::list_pools(&settings).await.unwrap(),
-        Some(Commands::Info {}) => {
-            println!("info");
-        }
-        Some(Commands::Action {}) => {
-            println!("action");
+        Some(Commands::List {}) => list::list_pools(&settings).await?,
+        Some(Commands::Info { pool_id }) => info::main(&settings, pool_id).await?,
+        Some(Commands::Act(args)) => {
+            let action = match &args.action {
+                action if action == "swap" => actions::Actions::Swap,
+                _ => unimplemented!("not implemented yet"),
+            };
+
+            act::main(&settings, action).await?
         }
         None => {
             println!("no command");
         }
     }
+
+    Ok(())
 }
 
 static WELCOME: &str = "
@@ -100,7 +106,7 @@ impl Config {
         Figment::new()
             .merge(Toml::file("portfolio.toml").nested())
             .merge(Env::prefixed("PORTFOLIO_"))
-            .join(Serialized::defaults(Args::parse()))
+            .join(Serialized::defaults(App::parse()))
             .extract()
     }
 }
@@ -114,7 +120,7 @@ impl Config {
 /// $ port <command> <args>
 #[derive(Parser, Debug, Serialize, Deserialize)]
 #[command(name = "portfolio-rs", version = "0.1.0", about = "Portfolio-rs cli.")]
-struct Args {
+struct App {
     #[command(subcommand)]
     command: Option<Commands>,
 }
@@ -124,16 +130,39 @@ struct Args {
 ///
 /// ### Usage
 /// $ port list
-/// $ port info <pool_id>
-/// $ port action <pool_id> <action> <args>
+/// $ port info -p <pool_id>
+/// $ port act -p <pool_id> -a <action>
 #[derive(Subcommand, Debug, Serialize, Deserialize)]
 enum Commands {
     /// Lists all the pools.
     List {},
     /// Prints a pool's state and configuration.
-    Info {},
+    Info {
+        #[arg(short, long)]
+        pool_id: String,
+    },
     /// Performs an action on a pool, such as swap, add liquidity, remove liquidity, etc.
-    Action {},
+    Act(ActArgs),
+}
+
+/// # Act
+/// Performs an action on a pool, such as swap, add liquidity, remove liquidity, etc.
+///
+/// ## ActArgs
+/// Pass the pool id and specific action to execute in the `act` subcommand.
+///
+/// ### Usage
+/// $ port act -p <pool_id> -a <action>
+#[derive(Debug, Args, Serialize, Deserialize)]
+struct ActArgs {
+    /// Function to call on Portfolio.
+    #[arg(short, long)]
+    action: String,
+    /// Pool id to execute the action on.
+    #[arg(short, long)]
+    pool_id: String,
+    /// Print all available logs while action is pending.
+    verbose: Option<bool>,
 }
 
 // =================== Tests ===================

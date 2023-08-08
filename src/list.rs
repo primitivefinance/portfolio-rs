@@ -6,7 +6,7 @@ use anyhow;
 use clap::{Arg, Command};
 use ethers::prelude::*;
 
-use inquire::{formatter::MultiOptionFormatter, MultiSelect};
+use inquire::{formatter::OptionFormatter, Select};
 use std::sync::Arc;
 
 use bindings::i_portfolio::{CreatePoolFilter, IPortfolio};
@@ -62,8 +62,8 @@ pub async fn list_pools(cfg: &Config) -> Result<(), anyhow::Error> {
         println!("{}", pool_list_msg.on_black());
     }
 
-    let formatter: MultiOptionFormatter<'_, u64> = &|a| format!("{} pools", a.len());
-    let ans = MultiSelect::new("Select a pool:", pool_ids)
+    let formatter: OptionFormatter<'_, u64> = &|a| format!("{}", a);
+    let ans = Select::new("Select a pool:", pool_ids)
         .with_formatter(formatter)
         .prompt();
 
@@ -72,14 +72,13 @@ pub async fn list_pools(cfg: &Config) -> Result<(), anyhow::Error> {
             let selected_msg = format!(
                 "{} {}",
                 "You selected:".blue(),
-                selected_pool_id[0].to_string().blue().bold()
+                selected_pool_id.to_string().blue().bold()
             );
             println!("{}", selected_msg.on_black());
 
             let commands_with_pool = vec!["info".to_string(), "swap".to_string()];
-            let formatter_with_pool: MultiOptionFormatter<'_, String> =
-                &|a| format!("{} commands", a.len());
-            let answer_with_pool = MultiSelect::new("Select a command:", commands_with_pool)
+            let formatter_with_pool: OptionFormatter<'_, String> = &|a| format!("{} commands", a);
+            let answer_with_pool = Select::new("Select a command:", commands_with_pool)
                 .with_formatter(formatter_with_pool)
                 .prompt();
 
@@ -88,15 +87,15 @@ pub async fn list_pools(cfg: &Config) -> Result<(), anyhow::Error> {
                     let selected_cmd_msg = format!(
                         "{} {}",
                         "You selected:".blue(),
-                        selected_command[0].to_string().blue().bold()
+                        selected_command.to_string().blue().bold()
                     );
                     println!("{}", selected_cmd_msg.on_black());
 
-                    match selected_command[0].as_str() {
+                    match selected_command.as_str() {
                         "info" => {
                             let args = App {
                                 command: Some(super::Commands::Info {
-                                    pool_id: selected_pool_id[0].to_string(),
+                                    pool_id: selected_pool_id.to_string(),
                                 }),
                             };
                             invoke::main(&args).await?;
@@ -128,7 +127,7 @@ pub async fn list_pools(cfg: &Config) -> Result<(), anyhow::Error> {
 
                             let args = App {
                                 command: Some(super::Commands::Act(super::ActArgs {
-                                    pool_id: selected_pool_id[0].to_string(),
+                                    pool_id: selected_pool_id.to_string(),
                                     args: Some(vec![sell_asset.to_string(), amount.to_string()]),
                                     function: "swap".to_string(),
                                     verbose: None,

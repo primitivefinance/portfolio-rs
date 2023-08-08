@@ -74,7 +74,11 @@ impl SwapArgs {
         contract: &IPortfolio<SignerMiddleware<Provider<Ws>, LocalWallet>>,
         pool_id: u64,
     ) -> Result<Order, anyhow::Error> {
-        println!("Previewing swap...");
+        let preview_msg = format!(
+            "\n{}",
+            "Previewing swap... please be patient\n".yellow().bold()
+        );
+        println!("{}", preview_msg.on_black());
 
         let mut swap_call = parse_args(pool_id, self.clone())?;
 
@@ -116,8 +120,8 @@ impl SwapArgs {
             compute_mark_price(swap_call.sell_asset, swap_call.input.into(), amount_out)?;
 
         let print_prices_formatted_with_colors = |bid: U256, ask: U256, mark_price: U256| {
-            println!(
-                "{} {} {} {}
+            let msg = format!(
+                "\n{} {} {} {}
                 {} {} {} {}
                 {} {} {} {}",
                 "\nDesired Price:".bold().blue(),
@@ -133,6 +137,7 @@ impl SwapArgs {
                 "\nSpot Price:".bold().blue(),
                 format_ether(spot_price).to_string().bold().blue(),
             );
+            println!("{}", msg.on_black());
         };
 
         print_prices_formatted_with_colors(bid, ask, mark_price);
@@ -140,12 +145,23 @@ impl SwapArgs {
         if !success {
             return Err(anyhow::anyhow!("Swap simulation failed"));
         } else {
-            println!(
-                "{} {} {:#?}",
+            let success_msg = format!(
+                "
+                {} {} {} {} {} {} {}
+                ",
                 "Swap simulation successful".bold().green(),
                 "🤑\n",
-                swap_call
+                "Result:\n".purple(),
+                "Input:".bold().purple(),
+                format_ether::<U256>(swap_call.input.into())
+                    .to_string()
+                    .purple(),
+                "Output:".bold().purple(),
+                format_ether::<U256>(swap_call.output.into())
+                    .to_string()
+                    .purple(),
             );
+            println!("{}", success_msg.on_black());
         }
 
         Ok(swap_call)
@@ -173,7 +189,15 @@ pub async fn main(
     let portfolio: IPortfolio<SignerMiddleware<Provider<Ws>, _>> =
         IPortfolio::new(cfg.portfolio_address.parse::<Address>()?, client);
     let version = portfolio.version().call().await?;
-    println!("Portfolio version: {}", version);
+    let version_msg = format!(
+        "
+        {} {} {}
+        ",
+        "Portfolio version:".yellow(),
+        version.to_string().bold().yellow(),
+        "\n"
+    );
+    println!("{}", version_msg.on_black());
 
     if let Some(args) = args {
         let swap_args = SwapArgs::from_cli(args.clone())?;
@@ -206,7 +230,7 @@ async fn do_swap(
     args: SwapArgs,
 ) -> Result<(), anyhow::Error> {
     let mut swap_args = args.prepare(portfolio, pool_id).await?;
-    /*  let mut result = portfolio
+    let mut result = portfolio
         .swap(swap_args.clone())
         .await
         .context("swap.rs: Failed to execute swap")?;
@@ -218,7 +242,7 @@ async fn do_swap(
         "Result:\n".purple(),
         result
     );
-    println!("{}", success_msg); */
+    println!("{}", success_msg.on_black());
     Ok(())
 }
 

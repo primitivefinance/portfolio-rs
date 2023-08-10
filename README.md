@@ -14,14 +14,24 @@ curl -L https://foundry.paradigm.xyz | bash
 foundryup
 ```
 
-### Setup & Run
+### Setup
 
 ```bash
 # Install submodule dependencies and generate rust bindings.
 ./setup.sh
 
+# Update .env with RPC url and private key
+cp .env.example .env
+```
+
+### Usage
+
+```bash
 # Run the app
-cargo run
+cargo run -- --help
+
+# [Optional] Install locally (breaks terminal output)
+cargo install --path . --force
 ```
 
 ### Recompile
@@ -36,7 +46,6 @@ If you choose a different portfolio version, or install new dependencies, make s
 ### Commands
 
 
-
 *List*
 
 Lists the available portfolio pools, including their pool id and TVL.
@@ -44,3 +53,7 @@ Lists the available portfolio pools, including their pool id and TVL.
 ```bash
 cargo run -- list
 ```
+
+- `list` - Lists all the pools, including pool id, tokens, and estimated TVL if available.
+- `info` - Prints a pool's state and configuration, if any.
+- `action` - Performs an action on a pool, such as swap, add liquidity, remove liquidity, etc. [Required] Settings in portfolio.toml.
